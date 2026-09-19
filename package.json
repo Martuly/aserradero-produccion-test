@@ -4,13 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "dev:api": "node --watch server/index.mjs",
-    "dev:full": "concurrently -k \"npm:dev\" \"npm:dev:api\""
+    "dev:api": "node server/index.mjs",
+    "start:api": "node server/index.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
