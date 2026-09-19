@@ -1,0 +1,35 @@
+ACTUALIZACION PRODUCCION - TRAZABILIDAD REAL + QR PUBLICO
+========================================================
+
+1. Se agregó backend mínimo Express/PostgreSQL en server/index.mjs.
+2. Endpoints:
+   GET /api/health
+   GET /api/trazabilidad/:codigo
+   GET /api/public/trazabilidad/:token
+3. La API usa fn_trazabilidad_paquete_completa(codigo).
+4. La pantalla interna de Trazabilidad consulta PostgreSQL cuando VITE_API_URL está configurada.
+5. La consulta pública por QR consulta PostgreSQL por public_token y genera el PDF con genealogía real.
+6. Se mantiene fallback a mock para no bloquear el prototipo si la API no está configurada.
+7. Los tokens demo de LIN714438/439/440 se alinearon con los valores cargados en PostgreSQL.
+8. Se agregó VITE_API_URL y variables del backend a .env.example.
+9. Se agregó sql/01_trazabilidad_api.sql con la función SQL usada por la API.
+
+PRUEBA LOCAL
+------------
+1. Copiar .env.example a .env y completar DATABASE_URL.
+2. Ejecutar: npm install
+3. Ejecutar en dos terminales:
+   npm run dev:api
+   npm run dev
+   o usar: npm run dev:full
+4. Probar API:
+   http://localhost:3001/api/health
+   http://localhost:3001/api/trazabilidad/PKG-FINAL-001
+   http://localhost:3001/api/public/trazabilidad/demo-lin714438-850
+5. Frontend:
+   http://localhost:5173/#/produccion/trazabilidad
+
+IMPORTANTE QR EN CELULAR
+------------------------
+Para escanear desde otro dispositivo, tanto el frontend como la API deben estar publicados
+o accesibles desde la red. No usar localhost en una URL que deba abrir el celular.

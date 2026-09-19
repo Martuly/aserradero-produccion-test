@@ -1,0 +1,20 @@
+MVP Producción - ajuste Orígenes / Geolocalización
+
+Cambios incluidos:
+- Nuevo maestro Orígenes / Montes.
+- Origen separado del ingreso mediante origenId.
+- Datos del origen: nombre, establecimiento, localidad, provincia, latitud, longitud, observaciones y activo.
+- Nuevo ingreso selecciona un origen existente y muestra sus coordenadas en solo lectura.
+- Ingresos, lotes, registro de producción, detalle de lote y detalle de paquete resuelven el nombre del origen desde el maestro.
+- Trazabilidad por paquete y por lote muestra origen + coordenadas.
+- Consulta pública para auditoría muestra origen y geolocalización.
+- PDF renombrado a "Certificado de Origen y Trazabilidad" e incorpora coordenadas.
+- Se conserva QR público por token.
+
+Validación realizada:
+- npm run typecheck: OK.
+- npm run build no pudo completarse en el entorno de trabajo por una dependencia opcional de Rollup faltante en node_modules importado desde Windows. Al instalar las dependencias nuevamente en el equipo destino debería regenerarse correctamente.
+
+Para ejecutar:
+1. npm install
+2. npm run dev
