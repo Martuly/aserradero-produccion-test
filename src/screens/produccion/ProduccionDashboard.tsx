@@ -1,311 +1,328 @@
-import { Header } from '../../components/layout/Header';
-import { Card } from '../../components/ui/Card';
+import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { getProduccionDashboard, type DashboardResumen } from '@/services/produccionDashboardApi';
+
+function isoDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function formatNumber(value: number | null, decimals = 1) {
+  if (value == null) return '—';
+  return value.toLocaleString('es-AR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  highlight = false,
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  highlight?: boolean;
+}) {
+  if (highlight) {
+    return (
+      <div className="rounded-2xl bg-iforest-800 p-5 text-white shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-iforest-100">{title}</p>
+        <p className="mt-3 text-3xl font-bold">{value}</p>
+        <p className="mt-2 text-sm text-iforest-100">{subtitle}</p>
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="p-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</p>
+        <p className="mt-3 text-3xl font-bold text-gray-900">{value}</p>
+        <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
+      </div>
+    </Card>
+  );
+}
 
 export function ProduccionDashboard() {
+  const today = useMemo(() => new Date(), []);
+  const [desde, setDesde] = useState(isoDate(startOfMonth(today)));
+  const [hasta, setHasta] = useState(isoDate(today));
+  const [appliedDesde, setAppliedDesde] = useState(desde);
+  const [appliedHasta, setAppliedHasta] = useState(hasta);
+  const [data, setData] = useState<DashboardResumen | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+
+    getProduccionDashboard(appliedDesde, appliedHasta)
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch((err: unknown) => {
+        if (active) {
+          setData(null);
+          setError(err instanceof Error ? err.message : 'No se pudo cargar el panel.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [appliedDesde, appliedHasta]);
+
+  const maxLoteM3 = Math.max(1, ...(data?.produccionPorLote.map((item) => item.metrosCubicos) ?? [1]));
+  const maxPaquetesSemana = Math.max(1, ...(data?.actividadSemanal.map((item) => item.paquetes) ?? [1]));
+
+  const aplicarFiltros = () => {
+    setAppliedDesde(desde);
+    setAppliedHasta(hasta);
+  };
+
   return (
-    <>
-      <Header
-        title="Panel de producción"
-        subtitle="Situación productiva y física del período seleccionado."
-      />
-
-      <div className="space-y-6 p-5 lg:p-6">
-
-        {/* FILTROS */}
+    <AppLayout
+      title="Panel de producción"
+      subtitle="Situación productiva y física del período seleccionado."
+      actions={
+        <Button variant="secondary" size="sm" onClick={aplicarFiltros} disabled={loading}>
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          Actualizar
+        </Button>
+      }
+    >
+      <div className="space-y-6">
         <Card>
-          <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 xl:grid-cols-5">
-
+          <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-600">
-                Sector
-              </label>
-
-              <select className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-iforest-600">
-                <option>Todos</option>
-                <option>Aserradero</option>
-                <option>Secado</option>
-                <option>Clasificación</option>
+              <label className="mb-1 block text-xs font-semibold text-gray-600">Período</label>
+              <select
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-iforest-600"
+                onChange={(event) => {
+                  const value = event.target.value;
+                  const now = new Date();
+                  if (value === 'month') {
+                    setDesde(isoDate(startOfMonth(now)));
+                    setHasta(isoDate(now));
+                  } else if (value === 'week') {
+                    const start = new Date(now);
+                    start.setDate(now.getDate() - 6);
+                    setDesde(isoDate(start));
+                    setHasta(isoDate(now));
+                  }
+                }}
+                defaultValue="month"
+              >
+                <option value="month">Mes actual</option>
+                <option value="week">Últimos 7 días</option>
+                <option value="custom">Personalizado</option>
               </select>
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-600">
-                Período
-              </label>
-
-              <select className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-iforest-600">
-                <option>Mes actual</option>
-                <option>Semana actual</option>
-                <option>Personalizado</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-600">
-                Desde
-              </label>
-
+              <label className="mb-1 block text-xs font-semibold text-gray-600">Desde</label>
               <input
                 type="date"
-                defaultValue="2026-09-01"
+                value={desde}
+                onChange={(event) => setDesde(event.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-iforest-600"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-600">
-                Hasta
-              </label>
-
-              <input
-                type="date"
-                defaultValue="2026-09-19"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-iforest-600"
-              />
+              <label className="mb-1 block text-xs font-semibold text-gray-600">Hasta</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={hasta}
+                  onChange={(event) => setHasta(event.target.value)}
+                  className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-iforest-600"
+                />
+                <Button onClick={aplicarFiltros} disabled={loading || !desde || !hasta}>
+                  Aplicar
+                </Button>
+              </div>
             </div>
-
-            <div className="flex items-end">
-              <button className="w-full rounded-lg bg-iforest-700 px-4 py-2 text-sm font-semibold text-white hover:bg-iforest-800">
-                Aplicar
-              </button>
-            </div>
-
           </div>
         </Card>
 
-        {/* INDICADORES */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-
-          <Card>
-            <div className="p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Materia prima procesada
-              </p>
-
-              <p className="mt-3 text-3xl font-bold text-gray-900">
-                320,0 t
-              </p>
-
-              <p className="mt-2 text-sm text-gray-500">
-                12 lotes cerrados
-              </p>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Producción útil
-              </p>
-
-              <p className="mt-3 text-3xl font-bold text-gray-900">
-                128,4 m³
-              </p>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Madera obtenida
-              </p>
-            </div>
-          </Card>
-
-          <div className="rounded-2xl bg-iforest-800 p-5 text-white shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-iforest-100">
-              Aprovechamiento físico
-            </p>
-
-            <p className="mt-3 text-3xl font-bold">
-              40,1 %
-            </p>
-
-            <p className="mt-2 text-sm text-iforest-100">
-              Salida útil ÷ entrada
-            </p>
+        {error && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
           </div>
+        )}
 
+        {loading && !data && (
           <Card>
-            <div className="p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Paquetes en proceso
-              </p>
-
-              <p className="mt-3 text-3xl font-bold text-gray-900">
-                18
-              </p>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Verdes y en secado
-              </p>
+            <div className="flex items-center justify-center gap-2 p-8 text-sm text-gray-500">
+              <RefreshCw size={18} className="animate-spin" />
+              Cargando datos reales de producción…
             </div>
           </Card>
+        )}
 
-          <Card>
-            <div className="p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Stock comercial
-              </p>
+        {data && (
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <MetricCard
+                title="Materia prima procesada"
+                value={data.indicadores.materiaPrimaProcesadaKg == null ? '—' : `${formatNumber(data.indicadores.materiaPrimaProcesadaKg / 1000)} t`}
+                subtitle={data.indicadores.lotesProcesados == null ? 'Sin consumo registrado en el período' : `${data.indicadores.lotesProcesados} lote(s) con consumo`}
+              />
 
-              <p className="mt-3 text-3xl font-bold text-gray-900">
-                86,4 m³
-              </p>
+              <MetricCard
+                title="Producción verde"
+                value={`${formatNumber(data.indicadores.produccionVerdeM3)} m³`}
+                subtitle="Paquetes verdes generados"
+              />
 
-              <p className="mt-2 text-sm text-gray-500">
-                Clasificado disponible
-              </p>
+              <MetricCard
+                title="Aprovechamiento físico"
+                value={data.indicadores.aprovechamientoFisico == null ? '—' : `${formatNumber(data.indicadores.aprovechamientoFisico)} %`}
+                subtitle={data.indicadores.aprovechamientoNota || 'Salida útil ÷ entrada'}
+                highlight
+              />
+
+              <MetricCard
+                title="Paquetes en proceso"
+                value={String(data.indicadores.paquetesEnProceso)}
+                subtitle="Estado EN_PROCESO"
+              />
+
+              <MetricCard
+                title="Stock comercial"
+                value={`${formatNumber(data.indicadores.stockComercialM3)} m³`}
+                subtitle="Clasificado / mecanizado / final disponible"
+              />
             </div>
-          </Card>
 
-        </div>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <div className="xl:col-span-2">
+                <Card>
+                  <div className="p-5">
+                    <h2 className="text-base font-bold text-gray-900">Paquetes generados por semana</h2>
+                    <p className="text-sm text-gray-500">Actividad real según fecha de generación</p>
 
-        {/* GRÁFICOS / APROVECHAMIENTO */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-
-          <div className="xl:col-span-2">
-            <Card>
-              <div className="p-5">
-                <h2 className="text-base font-bold text-gray-900">
-                  Entrada y producción útil
-                </h2>
-
-                <p className="text-sm text-gray-500">
-                  Comparación física por semana
-                </p>
-
-                <div className="mt-6 flex h-64 items-end justify-around border-b border-l border-gray-200 px-8">
-
-                  <div className="flex items-end gap-2">
-                    <div className="h-28 w-10 rounded-t-md bg-iforest-600" />
-                    <div className="h-12 w-10 rounded-t-md bg-ifaccent-500" />
+                    {data.actividadSemanal.length === 0 ? (
+                      <p className="mt-8 text-sm text-gray-500">No hay paquetes generados en el período.</p>
+                    ) : (
+                      <div className="mt-6 flex h-64 items-end gap-4 overflow-x-auto border-b border-l border-gray-200 px-6 pb-0">
+                        {data.actividadSemanal.map((item) => {
+                          const height = Math.max(12, Math.round((item.paquetes / maxPaquetesSemana) * 190));
+                          return (
+                            <div key={item.semana} className="flex min-w-20 flex-1 flex-col items-center justify-end">
+                              <span className="mb-2 text-xs font-semibold text-gray-700">{item.paquetes}</span>
+                              <div className="w-10 rounded-t-md bg-iforest-600" style={{ height }} />
+                              <span className="mt-2 whitespace-nowrap text-[11px] text-gray-500">{item.semana}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-
-                  <div className="flex items-end gap-2">
-                    <div className="h-36 w-10 rounded-t-md bg-iforest-600" />
-                    <div className="h-14 w-10 rounded-t-md bg-ifaccent-500" />
-                  </div>
-
-                  <div className="flex items-end gap-2">
-                    <div className="h-32 w-10 rounded-t-md bg-iforest-600" />
-                    <div className="h-14 w-10 rounded-t-md bg-ifaccent-500" />
-                  </div>
-
-                  <div className="flex items-end gap-2">
-                    <div className="h-44 w-10 rounded-t-md bg-iforest-600" />
-                    <div className="h-16 w-10 rounded-t-md bg-ifaccent-500" />
-                  </div>
-
-                </div>
+                </Card>
               </div>
-            </Card>
-          </div>
 
-          <Card>
-            <div className="p-5">
-              <h2 className="text-base font-bold text-gray-900">
-                Aprovechamiento por lote
-              </h2>
+              <Card>
+                <div className="p-5">
+                  <h2 className="text-base font-bold text-gray-900">Producción verde por lote</h2>
+                  <p className="mb-5 text-sm text-gray-500">Volumen generado con origen directo en cada lote</p>
 
-              <p className="mb-5 text-sm text-gray-500">
-                Solo partes cerrados
-              </p>
-
-              <div className="space-y-5">
-
-                {[
-                  ['L-0926-014', 43],
-                  ['L-0926-013', 41],
-                  ['L-0926-011', 39],
-                  ['L-0926-009', 36],
-                ].map(([lote, valor]) => (
-                  <div key={lote}>
-                    <div className="mb-1 flex justify-between text-sm">
-                      <span>{lote}</span>
-                      <span className="font-semibold">{valor}%</span>
+                  {data.produccionPorLote.length === 0 ? (
+                    <p className="text-sm text-gray-500">Sin producción por lote en el período.</p>
+                  ) : (
+                    <div className="space-y-5">
+                      {data.produccionPorLote.map((item) => (
+                        <div key={item.lote}>
+                          <div className="mb-1 flex justify-between text-sm">
+                            <span>Lote {item.lote}</span>
+                            <span className="font-semibold">{formatNumber(item.metrosCubicos, 3)} m³</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-gray-200">
+                            <div
+                              className="h-2 rounded-full bg-iforest-600"
+                              style={{ width: `${Math.max(3, (item.metrosCubicos / maxLoteM3) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                </div>
+              </Card>
+            </div>
 
-                    <div className="h-2 rounded-full bg-gray-200">
-                      <div
-                        className="h-2 rounded-full bg-iforest-600"
-                        style={{ width: `${valor}%` }}
-                      />
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <div className="xl:col-span-2">
+                <Card>
+                  <div className="p-5">
+                    <h2 className="text-base font-bold text-gray-900">Inventario por etapa</h2>
+                    <p className="text-sm text-gray-500">Valores calculados desde lotes y paquetes actuales</p>
+
+                    <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+                      {[
+                        [data.inventario.playaKg == null ? '—' : `${formatNumber(data.inventario.playaKg / 1000)} t`, 'Playa de rollos'],
+                        [`${formatNumber(data.inventario.maderaVerdeM3)} m³`, 'Madera verde'],
+                        [data.inventario.enSecadoM3 == null ? '—' : `${formatNumber(data.inventario.enSecadoM3)} m³`, 'En secado'],
+                        [`${formatNumber(data.inventario.aClasificarM3)} m³`, 'A clasificar'],
+                        [`${formatNumber(data.inventario.stockComercialM3)} m³`, 'Stock comercial'],
+                        [String(data.inventario.lotesAbiertos), 'Lotes abiertos'],
+                      ].map(([value, label]) => (
+                        <div key={label} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                          <p className="text-xl font-bold text-gray-900">{value}</p>
+                          <p className="mt-1 text-sm text-gray-500">{label}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-
+                </Card>
               </div>
-            </div>
-          </Card>
 
-        </div>
+              <Card>
+                <div className="p-5">
+                  <h2 className="text-base font-bold text-gray-900">Alertas de seguimiento</h2>
 
-        {/* INVENTARIO / ALERTAS */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-
-          <div className="xl:col-span-2">
-            <Card>
-              <div className="p-5">
-                <h2 className="text-base font-bold text-gray-900">
-                  Inventario por etapa
-                </h2>
-
-                <p className="text-sm text-gray-500">
-                  Unidades físicas registradas
-                </p>
-
-                <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-
-                  {[
-                    ['94,2 t', 'Playa de rollos'],
-                    ['31,8 m³', 'Madera verde'],
-                    ['22,6 m³', 'En secado'],
-                    ['8,4 m³', 'A clasificar'],
-                    ['86,4 m³', 'Stock comercial'],
-                    ['6', 'Lotes abiertos'],
-                  ].map(([value, label]) => (
-                    <div
-                      key={label}
-                      className="rounded-xl border border-gray-200 bg-gray-50 p-4"
-                    >
-                      <p className="text-xl font-bold text-gray-900">
-                        {value}
-                      </p>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        {label}
-                      </p>
+                  {data.alertas.length === 0 ? (
+                    <div className="mt-5 rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-3 text-sm text-gray-700">
+                      No hay alertas calculadas para el estado actual.
                     </div>
-                  ))}
-
+                  ) : (
+                    <div className="mt-5 space-y-3">
+                      {data.alertas.map((alerta, index) => {
+                        const classes = alerta.nivel === 'warning'
+                          ? 'border-ifaccent-500 bg-ifaccent-50'
+                          : alerta.nivel === 'success'
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-iforest-500 bg-iforest-50';
+                        return (
+                          <div key={`${alerta.texto}-${index}`} className={`rounded-lg border-l-4 p-3 text-sm text-gray-700 ${classes}`}>
+                            {alerta.texto}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Card>
-          </div>
-
-          <Card>
-            <div className="p-5">
-              <h2 className="text-base font-bold text-gray-900">
-                Alertas de seguimiento
-              </h2>
-
-              <div className="mt-5 space-y-3">
-
-                <div className="rounded-lg border-l-4 border-ifaccent-500 bg-ifaccent-50 p-3 text-sm text-gray-700">
-                  2 partes continúan abiertos desde el turno anterior.
-                </div>
-
-                <div className="rounded-lg border-l-4 border-iforest-500 bg-iforest-50 p-3 text-sm text-gray-700">
-                  3 paquetes salieron del secado y están pendientes de clasificación.
-                </div>
-
-                <div className="rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-3 text-sm text-gray-700">
-                  El lote L-0926-014 alcanzó 43% de aprovechamiento.
-                </div>
-
-              </div>
+              </Card>
             </div>
-          </Card>
-
-        </div>
-
+          </>
+        )}
       </div>
-    </>
+    </AppLayout>
   );
 }
