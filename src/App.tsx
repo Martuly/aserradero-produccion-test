@@ -1,4 +1,6 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import { ProduccionDashboard } from '@/screens/produccion/ProduccionDashboard';
 import { ProduccionIngresos } from '@/screens/produccion/ProduccionIngresos';
 import { ProduccionIngresoDetalle } from '@/screens/produccion/ProduccionIngresoDetalle';
 import { ProduccionLotes } from '@/screens/produccion/ProduccionLotes';
@@ -14,18 +16,70 @@ function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/produccion/trazabilidad" replace />} />
-        <Route path="/produccion/ingresos" element={<ProduccionIngresos />} />
-        <Route path="/produccion/ingresos/:id" element={<ProduccionIngresoDetalle />} />
-        <Route path="/produccion/lotes" element={<ProduccionLotes />} />
-        <Route path="/produccion/lotes/:id" element={<ProduccionLoteDetalle />} />
-        <Route path="/produccion/registrar" element={<ProduccionRegistrar />} />
-        <Route path="/produccion/paquetes" element={<ProduccionPaquetes />} />
-        <Route path="/produccion/paquetes/:id" element={<ProduccionPaqueteDetalle />} />
-        <Route path="/produccion/trazabilidad" element={<ProduccionTrazabilidad />} />
-        <Route path="/produccion/origenes" element={<ProduccionOrigenes />} />
-        <Route path="/trazabilidad/:codigo" element={<ProduccionTrazabilidad />} />
-        <Route path="/public/trazabilidad/:token" element={<ProduccionTrazabilidadPublica />} />
+        <Route
+          path="/"
+          element={<Navigate to="/produccion/panel" replace />}
+        />
+
+        <Route
+          path="/produccion/panel"
+          element={<ProduccionDashboard />}
+        />
+
+        <Route
+          path="/produccion/ingresos"
+          element={<ProduccionIngresos />}
+        />
+
+        <Route
+          path="/produccion/ingresos/:id"
+          element={<ProduccionIngresoDetalle />}
+        />
+
+        <Route
+          path="/produccion/lotes"
+          element={<ProduccionLotes />}
+        />
+
+        <Route
+          path="/produccion/lotes/:id"
+          element={<ProduccionLoteDetalle />}
+        />
+
+        <Route
+          path="/produccion/registrar"
+          element={<ProduccionRegistrar />}
+        />
+
+        <Route
+          path="/produccion/paquetes"
+          element={<ProduccionPaquetes />}
+        />
+
+        <Route
+          path="/produccion/paquetes/:id"
+          element={<ProduccionPaqueteDetalle />}
+        />
+
+        <Route
+          path="/produccion/trazabilidad"
+          element={<ProduccionTrazabilidad />}
+        />
+
+        <Route
+          path="/produccion/origenes"
+          element={<ProduccionOrigenes />}
+        />
+
+        <Route
+          path="/trazabilidad/:codigo"
+          element={<ProduccionTrazabilidad />}
+        />
+
+        <Route
+          path="/public/trazabilidad/:token"
+          element={<ProduccionTrazabilidadPublica />}
+        />
       </Routes>
     </HashRouter>
   );

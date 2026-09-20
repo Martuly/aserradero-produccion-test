@@ -3,10 +3,17 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-sky-600 text-white hover:bg-sky-700 active:bg-sky-800 shadow-sm',
-  secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 active:bg-gray-100',
-  danger: 'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-sm',
-  ghost: 'text-gray-600 hover:bg-gray-100 active:bg-gray-200',
+  primary:
+    'bg-iforest-700 text-white hover:bg-iforest-800 active:bg-iforest-900 shadow-sm',
+
+  secondary:
+    'bg-white text-iforest-700 border border-bordersoft hover:bg-iforest-50 active:bg-iforest-100',
+
+  danger:
+    'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-sm',
+
+  ghost:
+    'text-iforest-700 hover:bg-iforest-50 active:bg-iforest-100',
 };
 
 export function Button({
@@ -24,35 +31,78 @@ export function Button({
     md: 'px-4 py-2 text-sm',
     lg: 'px-6 py-3 text-base',
   };
+
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`
+        inline-flex items-center justify-center gap-2
+        rounded-xl
+        font-semibold
+        transition-colors
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+        ${variants[variant]}
+        ${sizes[size]}
+        ${className}
+      `}
     >
       {children}
     </button>
   );
 }
 
-export function ButtonLink({ children, variant = 'primary', className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+export function ButtonLink({
+  children,
+  variant = 'primary',
+  className = '',
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: Variant;
+}) {
   const variants2: Record<Variant, string> = {
-    primary: 'text-sky-600 hover:text-sky-700',
-    secondary: 'text-gray-600 hover:text-gray-900',
+    primary: 'text-iforest-700 hover:text-iforest-800',
+    secondary: 'text-textmuted hover:text-textmain',
     danger: 'text-rose-600 hover:text-rose-700',
-    ghost: 'text-gray-500 hover:text-gray-700',
+    ghost: 'text-iforest-600 hover:text-iforest-800',
   };
+
   return (
-    <button {...props} className={`inline-flex items-center gap-1 text-sm font-medium transition-colors ${variants2[variant]} ${className}`}>
+    <button
+      {...props}
+      className={`
+        inline-flex items-center gap-1
+        text-sm font-medium
+        transition-colors
+        ${variants2[variant]}
+        ${className}
+      `}
+    >
       {children}
     </button>
   );
 }
 
-export function IconButton({ children, className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
+export function IconButton({
+  children,
+  className = '',
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: ReactNode;
+}) {
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 ${className}`}
+      className={`
+        inline-flex items-center justify-center
+        rounded-xl
+        p-2
+        text-iforest-700
+        transition-colors
+        hover:bg-iforest-50
+        hover:text-iforest-800
+        ${className}
+      `}
     >
       {children}
     </button>
