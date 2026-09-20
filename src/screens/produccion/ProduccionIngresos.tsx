@@ -17,6 +17,7 @@ function IngresoForm({ onSave, onCancel }: { onSave: (data: Omit<Ingreso, 'id' |
   const [remito, setRemito] = useState('');
   const [origenId, setOrigenId] = useState('');
   const [producto, setProducto] = useState('');
+  const [cantidadRollos, setCantidadRollos] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [pesoBruto, setPesoBruto] = useState('');
   const [tara, setTara] = useState('');
@@ -29,9 +30,11 @@ function IngresoForm({ onSave, onCancel }: { onSave: (data: Omit<Ingreso, 'id' |
   const origenSeleccionado = origenId ? produccionService.getOrigen(origenId) : undefined;
 
   const handleGuardar = () => {
-    if (!fecha || !proveedor || !remito || !origenId) return;
+    if (!fecha || !proveedor || !remito || !origenId || !producto || !cantidadRollos) return;
     onSave({
-      fecha, proveedor, remito, origenId, producto, observaciones,
+      fecha, proveedor, remito, origenId, producto,
+      cantidadRollos: parseInt(cantidadRollos, 10) || 0,
+      observaciones,
       pesoBruto: parseFloat(pesoBruto) || 0,
       tara: parseFloat(tara) || 0,
       pesoNeto: pesoNeto > 0 ? pesoNeto : 0,
@@ -61,6 +64,15 @@ function IngresoForm({ onSave, onCancel }: { onSave: (data: Omit<Ingreso, 'id' |
               <option value="Rollo mixto">Rollo mixto</option>
             </Select>
           </Field>
+          <Field label="Cantidad de rollos">
+  <Input
+    type="number"
+    min="0"
+    value={cantidadRollos}
+    onChange={(e) => setCantidadRollos(e.target.value)}
+    placeholder="0"
+  />
+</Field>
           <Field label="Observaciones"><Input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} /></Field>
         </div>
 
@@ -100,7 +112,7 @@ function IngresoForm({ onSave, onCancel }: { onSave: (data: Omit<Ingreso, 'id' |
 
       <div className="flex justify-end gap-3 pt-2">
         <Button variant="secondary" onClick={onCancel}>Cancelar</Button>
-        <Button onClick={handleGuardar} disabled={!fecha || !proveedor || !remito || !origenId}>Guardar ingreso</Button>
+        <Button onClick={handleGuardar} disabled={!fecha || !proveedor || !remito || !origenId || !producto || !cantidadRollos}>Guardar ingreso</Button>
       </div>
     </div>
   );

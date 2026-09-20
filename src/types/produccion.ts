@@ -23,6 +23,9 @@ export type Ingreso = {
   remito: string;
   origenId: string;
   producto: string;
+
+  cantidadRollos?: number;
+  
   pesoBruto: number;
   tara: number;
   pesoNeto: number;
