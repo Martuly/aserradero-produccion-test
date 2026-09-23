@@ -36,7 +36,6 @@ export function ProduccionRegistrar() {
   const navigate = useNavigate();
   const lotes = produccionService.getLotes();
   const [fecha, setFecha] = useState('');
-  const [turno, setTurno] = useState('');
   const [sector, setSector] = useState('');
   const [linea, setLinea] = useState('');
   const [loteId, setLoteId] = useState('');
@@ -75,14 +74,14 @@ export function ProduccionRegistrar() {
 
     produccionService.addProduccion(
       {
-        fecha, turno, sector, linea, loteId,
+        fecha, turno: '', sector, linea, loteId,
         cantidadProcesada: parseFloat(cantidadProcesada) || 0,
         unidadMedida, observaciones,
       },
       paquetesValidos.map((p) => ({
         ...p,
         fecha,
-        turno,
+        turno: '',
         linea,
       })),
     );
@@ -112,14 +111,7 @@ export function ProduccionRegistrar() {
         <CardBody>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Fecha"><Input value={fecha} onChange={(e) => setFecha(e.target.value)} placeholder="DD/MM/AAAA" /></Field>
-            <Field label="Turno">
-              <Select value={turno} onChange={(e) => setTurno(e.target.value)}>
-                <option value="">Seleccionar…</option>
-                <option value="Mañana">Mañana</option>
-                <option value="Tarde">Tarde</option>
-                <option value="Noche">Noche</option>
-              </Select>
-            </Field>
+           
             <Field label="Sector">
               <Select value={sector} onChange={(e) => setSector(e.target.value)}>
                 <option value="">Seleccionar…</option>
